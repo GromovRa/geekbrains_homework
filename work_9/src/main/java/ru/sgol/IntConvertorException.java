@@ -1,6 +1,6 @@
 package ru.sgol;
 
-public class IntConvertorException extends Exception{
+public class IntConvertorException extends RuntimeException{
     public IntConvertorException(String message) {
         super(message);
     }

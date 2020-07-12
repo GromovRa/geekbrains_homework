@@ -10,12 +10,12 @@ public class App {
 
         try {
             System.out.println(Arrays.deepToString(convertStringArrayToInt(convertStringToArray(ARRAY_STRING))));
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             System.out.println(e);
         }
     }
 
-    private static String[][] convertStringToArray (String inString) throws Exception {
+    private static String[][] convertStringToArray (String inString) throws StringConvertorException {
         String[] lines= inString.split("\n");
         String[][] outArray = new String[lines.length][];
 
@@ -35,7 +35,7 @@ public class App {
         return outArray;
     }
 
-    private static Integer[][] convertStringArrayToInt (String[][] inArray) throws Exception {
+    private static Integer[][] convertStringArrayToInt (String[][] inArray) throws IntConvertorException {
         Integer[][] outArray = new Integer[inArray.length][];
 
         try {
