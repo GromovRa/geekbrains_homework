@@ -19,13 +19,14 @@ public class App {
         String[] lines= inString.split("\n");
         String[][] outArray = new String[lines.length][];
 
+        if (outArray.length != 4) {
+            throw new StringConvertorException("Не верное колличество столбцов");
+        }
+
         for (int i = 0; i < lines.length; i++) {
             outArray[i] = lines[i].split(" ");
         }
 
-        if (outArray.length != 4) {
-            throw new StringConvertorException("Не верное колличество столбцов");
-        }
         for (String[] s: outArray){
             if (s.length != 4) {
                 throw new StringConvertorException("Не верное колличество строк");
