@@ -4,6 +4,12 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.PrintWriter;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class ClientGUI extends JFrame implements ActionListener, Thread.UncaughtExceptionHandler {
 
@@ -27,7 +33,6 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
     private final JList<String> listUsers = new JList<>();
 
 
-
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -38,13 +43,12 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
     }
 
 
-    ClientGUI () {
+    ClientGUI() {
         Thread.setDefaultUncaughtExceptionHandler(this);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setTitle("Chat");
         setSize(WIDTH, HEIGHT);
         setAlwaysOnTop(true);
-
         listUsers.setListData(new String[]{"user1", "user2", "user3", "user4",
                 "user5", "user6", "user7", "user8", "user9", "user-with-too-long-name-in-this-chat"});
         JScrollPane scrollPaneUsers = new JScrollPane(listUsers);
@@ -54,7 +58,6 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
         chatArea.setLineWrap(true);
         chatArea.setWrapStyleWord(true);
         chatArea.setEditable(false);
-
         panelTop.add(ipAddressField);
         panelTop.add(portField);
         panelTop.add(cbAlwaysOnTop);
@@ -72,6 +75,9 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
 
         cbAlwaysOnTop.addActionListener(this);
 
+        buttonSend.addActionListener(this);
+        this.getRootPane().setDefaultButton(buttonSend);
+
         setVisible(true);
     }
 
@@ -79,10 +85,31 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
     @Override
     public void actionPerformed(ActionEvent e) {
         Object src = e.getSource();
-        if (src == cbAlwaysOnTop) {
+        if (src == buttonSend) {
+            sendMessage(loginField.getText(), messageField.getText());
+            messageField.setText("");
+            messageField.grabFocus();
+        } else if (src == cbAlwaysOnTop) {
             setAlwaysOnTop(cbAlwaysOnTop.isSelected());
         } else {
             throw new RuntimeException("Unsupported action: " + src);
+        }
+    }
+
+    private void sendMessage(String writerName, String message) {
+        String formatMessage = String.format("%s %s: %s%n", LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy:hh:mm")),
+                writerName,
+                message);
+        chatArea.append(formatMessage);
+        logMessageINtoFile(formatMessage);
+
+    }
+
+    private void logMessageINtoFile( String message) {
+        File file = new File(LocalDateTime.now().format((DateTimeFormatter.ofPattern("dd.MM.yyyy")))+ "_log.txt");
+        try (PrintWriter pw = new PrintWriter(new FileOutputStream(file, true))) {
+            pw.print(message);
+        } catch (FileNotFoundException ignored) {
         }
     }
 
