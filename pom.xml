@@ -22,6 +22,7 @@
         <module>work_10</module>
         <module>chat</module>
         <module>work_12_threads</module>
+        <module>chat-library</module>
     </modules>
 
     <build>

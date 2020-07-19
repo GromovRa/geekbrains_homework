@@ -1,5 +1,6 @@
 package ru.sgol.gui;
 
+import ru.sgol.chat.common.MessageLibrary;
 import ru.sgol.net.MessageSocketThread;
 import ru.sgol.net.MessageSocketThreadListener;
 
@@ -104,19 +105,8 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
             }
 
         } else if (src == buttonDisconnect) {
-            switchVisibleModeOfPanels();
-            if (messageSocketThread == null
-                    || messageSocketThread.getSocket().isClosed()
-                    || !messageSocketThread.getSocket().isConnected()
-            ) {
-                System.out.println("Connection is not need to be closed");
-            } else {
-                try {
-                    messageSocketThread.getSocket().close();
-                } catch (IOException ioException) {
-                    showError(ioException.getMessage());
-                }
-            }
+
+            messageSocketThread.close();
         } else {
             throw new RuntimeException("Unsupported action: " + src);
         }
@@ -166,7 +156,18 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
         panelBottom.setVisible(!panelBottom.isVisible());
         panelTop.setVisible(!panelTop.isVisible());
     }
+    @Override
+    public void onSocketReady() {
+        panelTop.setVisible(false);
+        panelBottom.setVisible(true);
+        messageSocketThread.sendMessage(MessageLibrary.getAuthRequestMessage(loginField.getText(), new String(passwordField.getPassword())));
+    }
 
+    @Override
+    public void onSocketClosed() {
+        panelTop.setVisible(true);
+        panelBottom.setVisible(false);
+    }
     @Override
     public void onMessageReceived(String msg) {
         putMessageInChat("server", msg);
