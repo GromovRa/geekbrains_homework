@@ -10,9 +10,17 @@ public class ClientSessionThread extends MessageSocketThread {
 
     private boolean isAuthorized = false;
     private String nickname;
+    private boolean reconnected = false;
+
+    public long getStartTimeMillis() {
+        return startTimeMillis;
+    }
+
+    private long startTimeMillis;
 
     public ClientSessionThread(MessageSocketThreadListener listener, String name, Socket socket) {
         super(listener, name, socket);
+        startTimeMillis = System.currentTimeMillis();
     }
 
     public boolean isAuthorized() {
@@ -31,7 +39,6 @@ public class ClientSessionThread extends MessageSocketThread {
 
     public void authDeny() {
         sendMessage(MessageLibrary.getAuthDeniedMessage());
-        close();
     }
 
     public void authError(String msg) {
@@ -39,4 +46,19 @@ public class ClientSessionThread extends MessageSocketThread {
         close();
     }
 
+    public void setAuthorized(boolean authorized) {
+        isAuthorized = authorized;
+    }
+
+    public void setNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    public boolean isReconnected() {
+        return reconnected;
+    }
+
+    public void setReconnected(boolean reconnected) {
+        this.reconnected = reconnected;
+    }
 }

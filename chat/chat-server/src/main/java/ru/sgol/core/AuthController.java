@@ -4,10 +4,31 @@ import ru.sgol.data.User;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Vector;
 
-public class AuthController {
+public class AuthController extends Thread{
 
     HashMap<String, User> users = new HashMap<>();
+
+    private Vector<ClientSessionThread> clients;
+
+    public AuthController(String name, Vector<ClientSessionThread> clients ) {
+        super(name);
+        this.clients = clients;
+    }
+
+    @Override
+    public void run() {
+        while (!isInterrupted()) {
+            for (ClientSessionThread clientSession : clients){
+                if(System.currentTimeMillis() - clientSession.getStartTimeMillis() > 120_000
+                && !clientSession.isAuthorized()){
+                    clientSession.authDeny();
+                    clientSession.close();
+                }
+            }
+        }
+    }
 
     public void init() {
         for (User user : receiveUsers()) {
