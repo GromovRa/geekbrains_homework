@@ -1,4 +1,6 @@
-package ru.sgol;
+package ru.sgol.gui;
+
+import ru.sgol.core.ChatServer;
 
 import javax.swing.*;
 import java.awt.*;
@@ -16,7 +18,6 @@ public class ServerGUI extends JFrame implements ActionListener, Thread.Uncaught
     private final JButton buttonStart = new JButton("Start");
     private final JButton buttonStop = new JButton("Stop");
 
-
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -25,7 +26,6 @@ public class ServerGUI extends JFrame implements ActionListener, Thread.Uncaught
             }
         });
     }
-
 
     ServerGUI () {
         Thread.setDefaultUncaughtExceptionHandler(this);

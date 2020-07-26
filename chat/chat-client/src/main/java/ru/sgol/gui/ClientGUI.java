@@ -1,17 +1,18 @@
-package ru.sgol;
+package ru.sgol.gui;
+
+import ru.sgol.net.MessageSocketThread;
+import ru.sgol.net.MessageSocketThreadListener;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.PrintWriter;
+import java.io.*;
+import java.net.Socket;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-public class ClientGUI extends JFrame implements ActionListener, Thread.UncaughtExceptionHandler {
+public class ClientGUI extends JFrame implements ActionListener, Thread.UncaughtExceptionHandler, MessageSocketThreadListener {
 
     private static final int WIDTH = 400;
     private static final int HEIGHT = 300;
@@ -31,6 +32,8 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
     private final JButton buttonSend = new JButton("Send");
 
     private final JList<String> listUsers = new JList<>();
+
+    private MessageSocketThread messageSocketThread;
 
 
     public static void main(String[] args) {
@@ -67,49 +70,55 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
         panelBottom.add(buttonDisconnect, BorderLayout.WEST);
         panelBottom.add(messageField, BorderLayout.CENTER);
         panelBottom.add(buttonSend, BorderLayout.EAST);
+        panelBottom.setVisible(false);
 
         add(scrollPaneChatArea, BorderLayout.CENTER);
         add(scrollPaneUsers, BorderLayout.EAST);
         add(panelTop, BorderLayout.NORTH);
         add(panelBottom, BorderLayout.SOUTH);
-
         cbAlwaysOnTop.addActionListener(this);
 
         buttonSend.addActionListener(this);
+        buttonLogin.addActionListener(this);
+        buttonDisconnect.addActionListener(this);
         this.getRootPane().setDefaultButton(buttonSend);
 
         setVisible(true);
     }
-
 
     @Override
     public void actionPerformed(ActionEvent e) {
         Object src = e.getSource();
         if (src == buttonSend) {
             sendMessage(loginField.getText(), messageField.getText());
-            messageField.setText("");
-            messageField.grabFocus();
         } else if (src == cbAlwaysOnTop) {
             setAlwaysOnTop(cbAlwaysOnTop.isSelected());
+        } else if (src == buttonLogin) {
+            Socket socket = null;
+            switchVisibleModeOfPanels();
+            try {
+                socket = new Socket(ipAddressField.getText(), Integer.parseInt(portField.getText()));
+                messageSocketThread = new MessageSocketThread(this, "Client" + loginField.getText(), socket);
+            } catch (IOException ioException) {
+                showError(ioException.getMessage());
+            }
+
+        } else if (src == buttonDisconnect) {
+            switchVisibleModeOfPanels();
+            if (messageSocketThread == null
+                    || messageSocketThread.getSocket().isClosed()
+                    || !messageSocketThread.getSocket().isConnected()
+            ) {
+                System.out.println("Connection is not need to be closed");
+            } else {
+                try {
+                    messageSocketThread.getSocket().close();
+                } catch (IOException ioException) {
+                    showError(ioException.getMessage());
+                }
+            }
         } else {
             throw new RuntimeException("Unsupported action: " + src);
-        }
-    }
-
-    private void sendMessage(String writerName, String message) {
-        String formatMessage = String.format("%s %s: %s%n", LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy:hh:mm")),
-                writerName,
-                message);
-        chatArea.append(formatMessage);
-        logMessageINtoFile(formatMessage);
-
-    }
-
-    private void logMessageINtoFile( String message) {
-        File file = new File(LocalDateTime.now().format((DateTimeFormatter.ofPattern("dd.MM.yyyy")))+ "_log.txt");
-        try (PrintWriter pw = new PrintWriter(new FileOutputStream(file, true))) {
-            pw.print(message);
-        } catch (FileNotFoundException ignored) {
         }
     }
 
@@ -119,6 +128,53 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
         StackTraceElement[] ste = e.getStackTrace();
         String msg = String.format("Exception in \"%s\": %s %s%n\t %s",
                 t.getName(), e.getClass().getCanonicalName(), e.getMessage(), ste[0]);
-        JOptionPane.showMessageDialog(this, msg, "Exception!", JOptionPane.ERROR_MESSAGE);
+        showError(msg);
+    }
+
+    private void sendMessage(String writerName, String message) {
+        if (message.isEmpty()) {
+            return;
+        }
+        putMessageInChat(writerName, message);
+        messageField.setText("");
+        messageField.grabFocus();
+        messageSocketThread.sendMessage(message);
+    }
+
+    private void putMessageInChat(String writerName, String message) {
+        String formatMessage = String.format("%s %s: %s%n", LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy:hh:mm")),
+                writerName,
+                message);
+        chatArea.append(formatMessage);
+        logMessageINtoFile(formatMessage);
+    }
+
+    private void logMessageINtoFile(String message) {
+        File file = new File(LocalDateTime.now().format((DateTimeFormatter.ofPattern("dd.MM.yyyy"))) + "_log.txt");
+        try (PrintWriter pw = new PrintWriter(new FileOutputStream(file, true))) {
+            pw.print(message);
+        } catch (FileNotFoundException ignored) {
+            showError(message);
+        }
+    }
+
+    private void showError(String errorMsg) {
+        JOptionPane.showMessageDialog(this, errorMsg, "Exception!", JOptionPane.ERROR_MESSAGE);
+    }
+
+    private void switchVisibleModeOfPanels() {
+        panelBottom.setVisible(!panelBottom.isVisible());
+        panelTop.setVisible(!panelTop.isVisible());
+    }
+
+    @Override
+    public void onMessageReceived(String msg) {
+        putMessageInChat("server", msg);
+    }
+
+    @Override
+    public void onException(Throwable throwable) {
+        throwable.printStackTrace();
+        showError(throwable.getMessage());
     }
 }
