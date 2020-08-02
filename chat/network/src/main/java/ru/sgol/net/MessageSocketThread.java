@@ -24,10 +24,10 @@ public class MessageSocketThread extends Thread {
         try {
             in = new DataInputStream(socket.getInputStream());
             out = new DataOutputStream(socket.getOutputStream());
-            listener.onSocketReady();
+            listener.onSocketReady(this);
             while (!isInterrupted()) {
                 if (!isClosed) {
-                    listener.onMessageReceived(in.readUTF());
+                    listener.onMessageReceived(this,in.readUTF());
                 }
             }
         } catch (IOException e) {
@@ -41,7 +41,7 @@ public class MessageSocketThread extends Thread {
     public void sendMessage(String message) {
         try {
             if (!socket.isConnected() || socket.isClosed() || isClosed) {
-                listener.onException(new RuntimeException("Socked closed or not initialized"));
+                listener.onException(this, new RuntimeException("Socked closed or not initialized"));
                 return;
             }
             if (!isClosed) {
@@ -49,7 +49,7 @@ public class MessageSocketThread extends Thread {
             }
         } catch (IOException e) {
             close();
-            listener.onException(e);
+            listener.onException(this, e);
         }
     }
 
@@ -69,6 +69,6 @@ public class MessageSocketThread extends Thread {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        listener.onSocketClosed();
+        listener.onSocketClosed(this);
     }
 }

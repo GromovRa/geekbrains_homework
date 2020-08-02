@@ -2,8 +2,11 @@ package ru.sgol.net;
 
 public interface MessageSocketThreadListener {
 
-    void onSocketReady();
-    void onSocketClosed();
-    void onMessageReceived(String msg);
-    void onException(Throwable throwable);
+    void onSocketReady(MessageSocketThread thread);
+
+    void onSocketClosed(MessageSocketThread thread);
+
+    void onMessageReceived(MessageSocketThread thread, String msg);
+
+    void onException(MessageSocketThread thread, Throwable throwable);
 }
