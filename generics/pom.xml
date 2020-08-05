@@ -9,14 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>chat</artifactId>
-    <packaging>pom</packaging>
-    <modules>
-        <module>network</module>
-        <module>chat-client</module>
-        <module>chat-library</module>
-        <module>chat-server</module>
-    </modules>
+    <artifactId>generics</artifactId>
 
 
 </project>
