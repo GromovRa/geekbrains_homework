@@ -130,7 +130,14 @@ public class ChatServer implements ServerSocketThreadListener, MessageSocketThre
         }
         String login = arr[2];
         String password = arr[3];
-        String nickname = authController.getNickname(login, password);
+        String nickname = null;
+
+        try {
+            nickname = authController.getNickname(login, password);
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
         if (nickname == null) {
             clientSessionThread.authDeny();
             return;
