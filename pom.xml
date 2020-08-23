@@ -23,6 +23,8 @@
         <module>chat</module>
         <module>work_12_threads</module>
         <module>generics</module>
+        <module>reflection</module>
+        <module>threads_2</module>
     </modules>
 
     <build>
